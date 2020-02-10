@@ -886,6 +886,7 @@ public final class TerminalView extends View {
 
         private long mLastTime;
 
+        @SuppressLint("NewApi")
         public HandleView(CursorController controller, int orientation) {
             super(TerminalView.this.getContext());
             mController = controller;
@@ -1160,6 +1161,7 @@ public final class TerminalView extends View {
             mHandleHeight = Math.max(mStartHandle.mHandleHeight, mEndHandle.mHandleHeight);
         }
 
+        @SuppressLint("NewApi")
         public void show() {
             mIsShowing = true;
             updatePosition();
