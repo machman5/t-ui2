@@ -1483,6 +1483,7 @@ public final class TerminalView extends View {
 
 
     private final Runnable mShowFloatingToolbar = new Runnable() {
+        @SuppressLint("NewApi")
         @Override
         public void run() {
             if (mActionMode != null) {
@@ -1491,6 +1492,7 @@ public final class TerminalView extends View {
         }
     };
 
+    @SuppressLint("NewApi")
     void hideFloatingToolbar(int duration) {
         if (mActionMode != null) {
             removeCallbacks(mShowFloatingToolbar);
