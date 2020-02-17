@@ -18,6 +18,9 @@ import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
+import ohi.andre.tui.bridge.Bridge;
+import ohi.andre.tui.bridge.TermuxSessionBridgeEnd;
+
 /**
  * A terminal session, consisting of a process coupled to a terminal interface.
  * <p>
@@ -138,6 +141,8 @@ public final class TerminalSession extends TerminalOutput {
         }
     };
 
+    private final TermuxSessionBridgeEnd bridgeEnd;
+
     private final String mShellPath;
     private final String mCwd;
     private final String[] mArgs;
@@ -145,6 +150,14 @@ public final class TerminalSession extends TerminalOutput {
 
     public TerminalSession(String shellPath, String cwd, String[] args, String[] env, SessionChangedCallback changeCallback) {
         mChangeCallback = changeCallback;
+
+        this.bridgeEnd = new TermuxSessionBridgeEnd() {
+            @Override
+            public void sendBackCommand(String command) {
+                command = command + '\n';
+                if (mShellPid > 0 && mProcessToTerminalIOQueue != null) mTerminalToProcessIOQueue.write(command.getBytes(), 0, command.length());
+            }
+        };
 
         this.mShellPath = shellPath;
         this.mCwd = cwd;
@@ -225,10 +238,22 @@ public final class TerminalSession extends TerminalOutput {
 
     }
 
+    private static final int ASCII_CODE_CARRIAGE_RETURN = 13;
+
     /** Write data to the shell process. */
     @Override
     public void write(byte[] data, int offset, int count) {
-        if (mShellPid > 0) mTerminalToProcessIOQueue.write(data, offset, count);
+        if(count == 1 && data[offset] == ASCII_CODE_CARRIAGE_RETURN) {
+            Bridge.getInstance().newline(bridgeEnd);
+        } else {
+            byte[] input = new byte[count];
+            System.arraycopy(data, offset, input, 0, count);
+
+            // write to t-ui, but not to Termux
+            Bridge.getInstance().input(bridgeEnd, new String(input));
+        }
+
+        //if (mShellPid > 0) mTerminalToProcessIOQueue.write(data, offset, count);
     }
 
     /** Write the Unicode code point to the terminal encoded in UTF-8. */
