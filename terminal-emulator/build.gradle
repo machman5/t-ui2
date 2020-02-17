@@ -61,6 +61,7 @@ tasks.withType(Test) {
 
 dependencies {
     testImplementation 'junit:junit:4.13'
+    implementation project(path: ':tui-bridge')
 }
 
 apply from: '../scripts/bintray-publish.gradle'
