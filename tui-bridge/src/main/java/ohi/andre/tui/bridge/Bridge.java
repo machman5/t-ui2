@@ -1,5 +1,11 @@
 package ohi.andre.tui.bridge;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import ohi.andre.tui.core.Core;
+
 /*
 This is the bridge between Termux and t-ui. Every command will pass through this class
  */
@@ -8,13 +14,15 @@ public class Bridge {
 
     private final InputParser inputParser;
 
+    private final ExecutorService workerThread = Executors.newSingleThreadExecutor();
+    private Future<Boolean> tuiCommandAttempt;
+
     private Bridge() {
         inputParser = new InputParser();
     }
 
-    public static Bridge getInstance() {
+    public static synchronized Bridge getInstance() {
         if(instance == null) instance = new Bridge();
-
         return instance;
     }
 
@@ -33,8 +41,13 @@ public class Bridge {
      tries to execute command as a t-ui command (apps, alias, tui-command, ..)
      this is an asynchronous method
      */
-    private void attemptTuiCommand(TermuxSessionBridgeEnd bridgeEnd, String command) {
-        sendBackToTermux(bridgeEnd, command);
+    private synchronized void attemptTuiCommand(TermuxSessionBridgeEnd bridgeEnd, String command) {
+        if(tuiCommandAttempt != null) tuiCommandAttempt.cancel(true);
+
+        tuiCommandAttempt = workerThread.submit(() -> {
+            boolean isTuiCommand = Core.getInstance().tryCommand(command);
+            if(!isTuiCommand) sendBackToTermux(bridgeEnd, command);
+        }, null);
     }
 
     /*
