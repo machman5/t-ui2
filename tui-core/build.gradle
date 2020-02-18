@@ -1,8 +1,18 @@
-apply plugin: 'java-library'
+apply plugin: 'com.android.library'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(path: ':tui-commands')
 }
 
 sourceCompatibility = "8"
 targetCompatibility = "8"
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 28
+    }
+}
